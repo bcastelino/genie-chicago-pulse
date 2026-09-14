@@ -4,6 +4,7 @@ import type { DataHealthResponse, PipelineRunResponse } from "../api/types";
 import { PipelineRunPanel } from "../components/PipelineRunPanel";
 import { ErrorState, Skeleton } from "../components/States";
 import { IconDatabase, IconPlay, IconRefresh } from "../components/icons";
+import { runtimeConfig } from "../config/runtime";
 import { formatCompact, formatDate, formatDateTime } from "../lib/format";
 import { isRunTerminal } from "../lib/pipeline";
 
@@ -127,24 +128,35 @@ export function DataHealthPage() {
                 <StatusBadge status={data.pipeline_status} />
               </div>
             </div>
-            <div className="card card--pad health-controls">
-              <div>
-                <div className="metric__label">Pipeline controls</div>
-                <div className="card__sub health-controls__description">
-                  Run the Daily Refresh job on demand.
+            {runtimeConfig.deploymentTarget === "appwrite" ? (
+              <div className="card card--pad health-controls">
+                <div>
+                  <div className="metric__label">Public data view</div>
+                  <div className="card__sub health-controls__description">
+                    Pipeline controls are available only in the governed Databricks deployment.
+                  </div>
                 </div>
               </div>
-              <button
-                className="btn btn--primary btn--sm"
-                onClick={openPipelinePanel}
-                disabled={triggering}
-              >
-                <IconPlay size={15} /> {pipelineRun && !isRunTerminal(pipelineRun) ? "View pipeline run" : "Run pipeline now"}
-              </button>
-            </div>
+            ) : (
+              <div className="card card--pad health-controls">
+                <div>
+                  <div className="metric__label">Pipeline controls</div>
+                  <div className="card__sub health-controls__description">
+                    Run the Daily Refresh job on demand.
+                  </div>
+                </div>
+                <button
+                  className="btn btn--primary btn--sm"
+                  onClick={openPipelinePanel}
+                  disabled={triggering}
+                >
+                  <IconPlay size={15} /> {pipelineRun && !isRunTerminal(pipelineRun) ? "View pipeline run" : "Run pipeline now"}
+                </button>
+              </div>
+            )}
           </div>
 
-          {pipelinePanelOpen && (
+          {runtimeConfig.deploymentTarget !== "appwrite" && pipelinePanelOpen && (
             <PipelineRunPanel
               mode={pipelinePanelMode}
               run={pipelineRun}

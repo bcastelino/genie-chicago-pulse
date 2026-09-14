@@ -1,4 +1,5 @@
-// Typed, same-origin API client. All calls hit the FastAPI server under /api.
+// Typed API client. Databricks uses same-origin /api calls; Appwrite prefixes
+// the same paths with its configured Function domain.
 
 import type {
   ComparisonResponse,
@@ -16,6 +17,7 @@ import type {
   NeighborhoodPulse,
   PipelineRunResponse,
 } from "./types";
+import { apiUrl } from "../config/runtime";
 
 export class ApiError extends Error {
   status: number;
@@ -29,7 +31,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let resp: Response;
   try {
-    resp = await fetch(path, {
+    resp = await fetch(apiUrl(path), {
       headers: { "Content-Type": "application/json" },
       ...init,
     });

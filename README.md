@@ -26,7 +26,8 @@ without wrestling with raw datasets.
 [**Open ChicagoPulse**](https://chicagopulse-7474647819672339.aws.databricksapps.com)
 
 > ChicagoPulse runs as a Databricks App. Access to the live experience may
-> require permission in the connected Databricks account.
+> require permission in the connected Databricks account. The same frontend can
+> also be hosted publicly with Appwrite Sites and a restricted Appwrite Function.
 
 </div>
 
@@ -75,8 +76,9 @@ end-to-end pipeline success from source-ingestion freshness and includes:
 - coverage, row counts, ingestion timestamps, and official Socrata links;
 - a source catalog that distinguishes datasets used by ChicagoPulse from
   potential future sources; and
-- an inline, confirmed pipeline runner with real Databricks task states and a
-  direct link to the run.
+- an inline, confirmed pipeline runner with real Databricks task states in the
+  governed Databricks deployment. The public Appwrite view is intentionally
+  read-only.
 
 ## The data behind ChicagoPulse
 
@@ -111,22 +113,33 @@ ChicagoPulse is designed to make evidence visible:
 ## How it works
 
 ```text
-React + TypeScript app
+One GitHub repository
         |
-        | same-origin /api/*
-        v
-FastAPI normalization layer
-        |-- Genie Conversation and Feedback APIs
-        |-- SQL Warehouse with allowlisted queries
-        `-- Jobs API for the bound daily refresh
+        |-- Databricks Apps: app/
+        |      React + FastAPI, same-origin /api/*
+        |
+        `-- Appwrite Sites: app/frontend/
+               https://<site-id>.appwrite.network
                          |
                          v
-             workspace.chicagopulse
+               Appwrite Function gateway
+               https://<function-id>.<region>.appwrite.run
+                         |
+                         | OAuth M2M
+                         v
+               ChicagoPulse Databricks App API
+                         |
+              Genie + SQL + Unity Catalog
 ```
 
-The frontend and API run together as a Databricks App using its dedicated
-service principal and explicit resource bindings. Mock providers reproduce the
-core chat, data, and pipeline lifecycles for safe local development.
+Both targets use the same React components, routes, styles, and API models. The
+Databricks deployment serves the compiled SPA and API together using its
+dedicated service principal and explicit resource bindings. The Appwrite Site
+uses a separate Function as a strict public gateway; Databricks credentials
+never enter the browser bundle. An optional Appwrite edge domain can later give
+the Function an `.appwrite.network` URL without requiring application changes.
+Mock providers reproduce the core chat, data, and pipeline lifecycles for safe
+local development.
 
 ## Project status
 
@@ -134,6 +147,7 @@ The production snapshot is live on Databricks Apps Free Edition. The current
 application includes the Chicago-at-dusk responsive interface, centered desktop
 navigation, mobile bottom navigation, a global footer, answer feedback, the
 task-level pipeline visualization, and the expanded Data Health source catalog.
+Appwrite support is repository-ready but is not presented here as deployed.
 
 ## Contributing and running locally
 

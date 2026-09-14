@@ -11,6 +11,7 @@ the product overview and live app, see [README.md](README.md). Review
 - Databricks CLI 1.x for authenticated development and deployment
 - Access to the ChicagoPulse Databricks workspace and bound resources for live
   testing
+- An Appwrite Cloud project for the optional public Site and Function deployment
 
 The commands below use Windows PowerShell. On macOS or Linux, use
 `.venv/bin/python`, `.venv/bin/pip`, and shell-style environment assignments.
@@ -25,6 +26,9 @@ app/
   server/               FastAPI API, providers, normalization, and mocks
   tests/                Backend tests
   frontend/             React, TypeScript, Vite, Vitest, and production dist
+appwrite/
+  functions/
+    databricks-proxy/   Restricted public gateway with isolated dependencies
 databricks.yml          App bundle and Databricks resource bindings
 notebooks/              Governed data pipeline; outside normal app-edit scope
 genie/                  Governed Genie assets and 30-question benchmark suite
@@ -47,6 +51,13 @@ Set-Location ../..
 
 Use `npm ci` instead of `npm install` when you want a clean install locked to
 `package-lock.json`.
+
+The optional Appwrite Function has its own environment and dependencies:
+
+```powershell
+python -m venv appwrite/functions/databricks-proxy/.venv
+appwrite/functions/databricks-proxy/.venv/Scripts/pip install -r appwrite/functions/databricks-proxy/requirements-dev.txt
+```
 
 ## Local configuration
 
@@ -94,6 +105,10 @@ npm run dev
 Open `http://127.0.0.1:5173`. Vite proxies `/api/*` to the FastAPI server on
 port 8000. The header displays a **Demo data** badge.
 
+No Appwrite variables are required for this workflow. With no frontend
+configuration, `VITE_DEPLOYMENT_TARGET` defaults to `databricks` and API calls
+remain relative to the current origin.
+
 ## Run a production-style local build
 
 This mode builds the SPA and serves the frontend and API from one FastAPI
@@ -137,7 +152,8 @@ unless a user explicitly confirms **Start pipeline** in Data Health.
 
 ## API map
 
-All browser calls are same-origin under `/api`.
+Databricks and local browser calls are same-origin under `/api`. An Appwrite
+build sends the same paths to its configured Function URL.
 
 | Method and path | Purpose |
 | --- | --- |
@@ -158,6 +174,12 @@ All browser calls are same-origin under `/api`.
 
 The frontend cannot send arbitrary SQL or select Databricks resources.
 
+The public Appwrite gateway exposes the read-only and Genie interaction routes
+listed above through answer feedback, plus `GET /api/data-health`. It blocks
+`POST /api/data-health/pipeline-runs` with `403` and does not expose
+`GET /api/data-health/pipeline-runs/{run_id}`. Unknown paths and unsupported
+methods are not forwarded to Databricks.
+
 ## Validation
 
 Run the full application gate before deployment.
@@ -176,6 +198,27 @@ npm run typecheck
 npm run lint
 npm run test
 npm run build
+```
+
+Appwrite Function, from `appwrite/functions/databricks-proxy/`:
+
+```powershell
+.venv/Scripts/python -m pytest
+.venv/Scripts/ruff check src tests
+```
+
+To verify both frontend targets, build Appwrite first with a non-production URL,
+then finish with the default Databricks build so `dist/` remains same-origin:
+
+```powershell
+Set-Location app/frontend
+$env:VITE_DEPLOYMENT_TARGET="appwrite"
+$env:VITE_API_BASE_URL="https://example.invalid"
+npm run build
+Remove-Item Env:VITE_DEPLOYMENT_TARGET
+Remove-Item Env:VITE_API_BASE_URL
+npm run build
+Set-Location ../..
 ```
 
 Bundle validation, from the repository root:
@@ -232,6 +275,130 @@ Required terminal states:
 
 Live app:
 [chicagopulse-7474647819672339.aws.databricksapps.com](https://chicagopulse-7474647819672339.aws.databricksapps.com)
+
+## Deploy with Appwrite Sites and Functions
+
+This mode publishes the existing React frontend as a static Site and sends API
+calls through a separate Python Function to the existing Databricks App. It does
+not copy the React application or move ChicagoPulse business logic into
+Appwrite.
+
+### Frontend runtime variables
+
+Only these values belong in the Appwrite Site build:
+
+| Variable | Production value |
+| --- | --- |
+| `VITE_DEPLOYMENT_TARGET` | `appwrite` |
+| `VITE_API_BASE_URL` | `https://<function-id>.<region>.appwrite.run` |
+
+Vite embeds these variables into the static browser bundle. Never configure a
+Databricks host, client ID, client secret, or access token on the Site. The
+initial API base should be the Function's generated regional `.appwrite.run`
+domain. If an optional `.appwrite.network` edge domain is later added to the
+Function, update the API base and rebuild the Site.
+
+### Function variables
+
+Configure these only on the Appwrite Function:
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABRICKS_HOST` | HTTPS workspace URL used for OAuth M2M |
+| `DATABRICKS_CLIENT_ID` | External gateway service-principal client ID |
+| `DATABRICKS_CLIENT_SECRET` | OAuth secret; mark this variable **Secret** |
+| `DATABRICKS_APP_URL` | HTTPS ChicagoPulse `.databricksapps.com` base URL |
+| `ALLOWED_ORIGINS` | Comma-separated exact Site and explicit localhost origins |
+| `UPSTREAM_TIMEOUT_SECONDS` | Optional, defaults to and recommends `20`; valid range 1–25 |
+
+The Function rejects unsafe base URLs and origins. Values above 20 seconds
+should be used carefully because synchronous Function-domain requests have a
+30-second execution window and still need time for OAuth and response handling.
+Function variable changes require a Function redeployment; Site variable
+changes require a Site rebuild and deployment.
+
+### Databricks service principal
+
+Create or select a separate external Databricks service principal, assign it to
+the ChicagoPulse workspace, create an OAuth secret, and grant it only `CAN USE`
+on the ChicagoPulse App. It does not need direct Genie, SQL Warehouse, Jobs, or
+Unity Catalog permissions. Those operations continue inside ChicagoPulse under
+the Databricks App's dedicated service principal and existing resource bindings.
+
+The Function creates one OAuth M2M `WorkspaceClient` and asks the SDK for a
+current authentication header for every outgoing request. It never stores an
+access token in frontend code or forwards a browser-supplied authorization
+header. Follow Databricks' official [external App API authentication](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/connect-local)
+and [App permissions](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/permissions)
+guidance when creating this identity and grant.
+
+### Appwrite Function settings
+
+| Setting | Value |
+| --- | --- |
+| Repository / branch | `bcastelino/genie-chicago-pulse` / `main` |
+| Root directory | `appwrite/functions/databricks-proxy` |
+| Runtime | Python 3.12 |
+| Install command | `pip install -r requirements.txt` |
+| Entrypoint | `src/main.py` |
+| Execute access | `Any` |
+| Appwrite API scopes | None |
+| Git path filter | `appwrite/functions/databricks-proxy/**` |
+
+The generated Function domain normally looks like
+`https://<function-id>.<region>.appwrite.run`.
+
+### Appwrite Site settings
+
+| Setting | Value |
+| --- | --- |
+| Repository / branch | `bcastelino/genie-chicago-pulse` / `main` |
+| Root directory | `app/frontend` |
+| Framework | React / Vite, static Site |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Output directory | `./dist` |
+| SPA fallback | `index.html` |
+| Git path filter | `app/frontend/**` |
+
+The generated Site domain normally looks like
+`https://<site-id>.appwrite.network`. Add that exact origin to
+`ALLOWED_ORIGINS`. Preview deployments do not receive API access automatically;
+add a preview's exact origin and redeploy the Function when one needs access.
+
+### Security boundary
+
+CORS is not authentication. The exact `ALLOWED_ORIGINS` list stops unauthorized
+browser origins, but curl, scripts, and bots can call a public Function without
+an `Origin` header. The explicit route allowlist, blocked administrative routes,
+Appwrite Firewall, and rate limiting are therefore the actual protection for
+public resource consumption. Configure platform-level rate limits before broad
+public promotion and monitor Function executions for unusual volume.
+
+### Manual deployment order
+
+Deployment changes external state and is not part of repository validation.
+
+1. Create the Appwrite Site and Function resources from the roots above.
+2. Create the external Databricks service principal and grant it `CAN USE` on
+   ChicagoPulse.
+3. Set the Function-only variables, including the exact Site origin, and deploy
+   the Function.
+4. Set the Site's two `VITE_*` variables using the generated `.appwrite.run`
+   Function URL, then deploy the Site.
+5. Verify `GET /api/health`, Ask, neighborhoods, Data Health, `/`, and SPA deep
+   links from the deployed Site.
+6. Verify an allowed-origin preflight returns `204`, a rejected origin returns
+   `403` without an allow-origin header, the pipeline trigger returns `403`, and
+   the pipeline run-status path returns `404`.
+7. Confirm the browser console is free of request and CORS errors and Function
+   logs contain no credentials, tokens, request bodies, or configured URLs.
+
+Appwrite supports monorepo root directories and Git path filters for both
+resources. See the official [React Site guide](https://appwrite.io/docs/products/sites/quick-start/react),
+[Function Git deployment guide](https://appwrite.io/docs/products/functions/deploy-from-git),
+[Function variable guide](https://appwrite.io/docs/products/functions/environment-variables),
+and [Function execution guide](https://appwrite.io/docs/products/functions/execute).
 
 ## Genie feedback maintenance
 

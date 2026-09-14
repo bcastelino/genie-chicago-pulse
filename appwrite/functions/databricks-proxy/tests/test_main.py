@@ -1,7 +1,39 @@
 from __future__ import annotations
 
+import importlib.util
+import sys
+from pathlib import Path
+
 import main as entrypoint
 from proxy import ProxySettings
+
+
+def test_entrypoint_bootstraps_function_root(monkeypatch):
+    function_root = Path(entrypoint.__file__).resolve().parent
+    monkeypatch.chdir(function_root.parent)
+    monkeypatch.setattr(
+        sys,
+        "path",
+        [
+            value
+            for value in sys.path
+            if value and Path(value).resolve() != function_root
+        ],
+    )
+    monkeypatch.delitem(sys.modules, "src", raising=False)
+    monkeypatch.delitem(sys.modules, "src.proxy", raising=False)
+
+    spec = importlib.util.spec_from_file_location(
+        "appwrite_bootstrap_entrypoint", function_root / "main.py"
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+
+    spec.loader.exec_module(module)
+
+    assert sys.path[0] == str(function_root)
+    assert module.ProxyGateway.__module__ == "src.proxy"
 
 
 def test_gateway_reuses_workspace_client_without_caching_authentication(monkeypatch):

@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import sys
 from functools import lru_cache
+from pathlib import Path
 
 import requests
 from databricks.sdk import WorkspaceClient
 
-from src.proxy import (
+_FUNCTION_ROOT = Path(__file__).resolve().parent
+if str(_FUNCTION_ROOT) not in sys.path:
+    sys.path.insert(0, str(_FUNCTION_ROOT))
+
+from src.proxy import (  # noqa: E402
     ConfigurationError,
     ProxyGateway,
     ProxySettings,

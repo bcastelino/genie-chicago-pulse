@@ -1,0 +1,61 @@
+# Databricks Asset Bundle for the ChicagoPulse App.
+# Prepares (does not deploy) the app definition and resource bindings.
+# Deploy only after explicit approval:  databricks bundle deploy -t prod -p chicagopulse
+bundle:
+  name: chicagopulse-app
+
+# The compiled SPA (app/frontend/dist) is git-ignored but must ship with the
+# app. Force-include it so `bundle deploy` uploads the built UI. Build it first:
+#   cd app/frontend && npm run build
+sync:
+  paths:
+    - app
+  include:
+    - app/frontend/dist/**
+
+variables:
+  genie_space_id:
+    description: Genie Space ID for ChicagoPulse.
+    default: "01f1a00325751a998b2eeb627266a3f2"
+  warehouse_id:
+    description: SQL Warehouse ID used for governed read-only queries.
+    default: "ef7f63b5aa1f7b07"
+  daily_refresh_job_id:
+    description: Existing ChicagoPulse Daily Refresh job ID.
+    default: "990266492565902"
+
+resources:
+  apps:
+    chicagopulse:
+      name: chicagopulse
+      description: "ChicagoPulse — Chicago neighborhood intelligence, powered by Genie."
+      source_code_path: ./app
+      resources:
+        - name: genie-space
+          description: Genie Agent used by the Ask ChicagoPulse experience.
+          genie_space:
+            name: chicagopulse-genie
+            space_id: ${var.genie_space_id}
+            permission: CAN_RUN
+        - name: sql-warehouse
+          description: Warehouse for allowlisted, read-only Gold-table queries.
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: daily-refresh-job
+          description: Existing scheduled pipeline job used for confirmed ad-hoc refreshes.
+          job:
+            id: ${var.daily_refresh_job_id}
+            permission: CAN_MANAGE_RUN
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-689a7f83-1cdb.cloud.databricks.com
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-689a7f83-1cdb.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

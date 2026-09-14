@@ -1,0 +1,43 @@
+# Declarative Repo Setup (DRS) blueprint for ChicagoPulse.
+# Reproducible dev environment for the frontend (React/Vite) + backend (FastAPI).
+# Verified locally (no git remote available for a cloud DRS build).
+initialize:
+  - run: |
+      # Backend Python environment.
+      python -m venv app/.venv
+      app/.venv/bin/pip install --upgrade pip
+      app/.venv/bin/pip install -r app/requirements-dev.txt
+  - run: |
+      # Frontend dependencies.
+      cd app/frontend && npm ci
+
+maintenance:
+  - run: |
+      app/.venv/bin/pip install -r app/requirements-dev.txt
+  - run: |
+      cd app/frontend && npm ci
+
+knowledge:
+  - name: lint
+    contents: |
+      # Frontend
+      cd app/frontend && npm run lint && npm run typecheck
+      # Backend
+      app/.venv/bin/ruff check app/server app/tests
+  - name: test
+    contents: |
+      # Frontend unit tests
+      cd app/frontend && npm run test
+      # Backend unit + contract tests
+      cd app && .venv/bin/python -m pytest
+  - name: build
+    contents: |
+      cd app/frontend && npm run build   # emits app/frontend/dist consumed by FastAPI
+  - name: startup
+    contents: |
+      # Dev: run API and Vite dev server in two shells.
+      cd app && MOCK_MODE=true .venv/bin/uvicorn server.main:app --reload --port 8000
+      cd app/frontend && npm run dev   # http://localhost:5173 (proxies /api -> :8000)
+      # Production-style: build frontend, then serve everything from FastAPI.
+      cd app/frontend && npm run build
+      cd app && .venv/bin/uvicorn server.main:app --port 8000

@@ -1,0 +1,27 @@
+# Databricks Apps runtime configuration.
+# The command is an argv sequence (not a shell string). Only DATABRICKS_APP_PORT
+# is substituted at runtime; other env vars must be declared under `env`.
+command:
+  - uvicorn
+  - server.main:app
+  - --host
+  - "0.0.0.0"
+  - --port
+  - "$DATABRICKS_APP_PORT"
+
+env:
+  - name: ENVIRONMENT
+    value: production
+  - name: MOCK_MODE
+    value: "false"
+  - name: CATALOG
+    value: workspace
+  - name: SCHEMA_NAME
+    value: chicagopulse
+  # Resource bindings — resolved from databricks.yml resource names.
+  - name: GENIE_SPACE_ID
+    valueFrom: genie-space
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: DATABRICKS_JOB_ID
+    valueFrom: daily-refresh-job

@@ -1,0 +1,107 @@
+/* ChicagoPulse design tokens — Chicago at Dusk.
+   Single source of truth for color, type, spacing, radius, elevation, motion. */
+:root {
+  /* Palette sampled from the supplied Chicago-at-dusk reference. */
+  --navy: #203646;
+  --navy-700: #294657;
+  --navy-600: #35586a;
+  --copper: #9e6849;
+  --copper-strong: #7f4e36;
+  --clay: #d9957c;
+  --rust: #b98459;
+  --bronze: #715e22;
+  --chat-accent: #2f6678;
+  --chat-accent-strong: #244f5e;
+  --chat-accent-soft: #edf5f7;
+  --chat-accent-border: #8eb4bf;
+
+  /* Legacy semantic aliases used by existing components. */
+  --chicago-blue: var(--copper-strong);
+  --chicago-blue-strong: #663d2b;
+  --chicago-sky: var(--clay);
+  --red: #9a3f4c;
+  --red-soft: #f8e9e8;
+
+  /* Warm neutrals */
+  --bg: #f5eee9;
+  --surface: #fffdfa;
+  --surface-alt: #f9f3ef;
+  --surface-deep: #eadbd1;
+  --border: #e1d3ca;
+  --border-strong: #c9b6aa;
+  --text: #203646;
+  --text-muted: #665b55;
+  --text-subtle: #75675f;
+
+  /* Status */
+  --ok: #3f6b56;
+  --ok-soft: #e7f0ea;
+  --warn: #8a5f28;
+  --warn-soft: #f5eadb;
+  --danger: var(--red);
+
+  /* Categorical chart palette — labels remain the primary differentiator. */
+  --c1: #203646;
+  --c2: #9e6849;
+  --c3: #b98459;
+  --c4: #715e22;
+  --c5: #d9957c;
+  --c6: #3f6b56;
+  --c7: #6f8190;
+  --c8: #9a3f4c;
+
+  /* Typography */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Public Sans Variable", "Public Sans", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono",
+    Menlo, Consolas, monospace;
+
+  --fs-12: 0.75rem;
+  --fs-13: 0.8125rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-20: 1.25rem;
+  --fs-24: 1.5rem;
+  --fs-30: 1.875rem;
+  --fs-38: 2.375rem;
+  --fs-52: 3.25rem;
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-normal: 1.55;
+
+  /* Spacing (4px base) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* Elevation — subtle only, no glow */
+  --sh-1: 0 1px 2px rgba(32, 54, 70, 0.06);
+  --sh-2: 0 10px 30px rgba(32, 54, 70, 0.1);
+  --sh-3: 0 24px 64px rgba(25, 24, 23, 0.18);
+  --sh-focus: 0 0 0 3px rgba(158, 104, 73, 0.28);
+
+  /* Layout */
+  --nav-h: 68px;
+  --content-max: 1200px;
+  --content-wide: 1440px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.72, 0.18, 1);
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+  --dur-3: 700ms;
+}

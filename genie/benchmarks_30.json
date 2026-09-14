@@ -1,0 +1,426 @@
+{
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "7e66575a0ace4fe089a83a8446d2f791",
+        "question": [
+          "Which 10 Community Areas had the most 311 requests in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nORDER BY total_311_requests DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b6999e85ef8b4d2a92f8d86aae4637ad",
+        "question": [
+          "How many 311 requests were recorded across Chicago in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6cd978a1084948359872b123a861b95b",
+        "question": [
+          "Which 10 Community Areas had the most building violations in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_building_violations) AS total_building_violations\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nORDER BY total_building_violations DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "92ac2f457d6f4edc8784f07a93eb1e29",
+        "question": [
+          "Which 10 Community Areas had the most building permits in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_building_permits) AS total_building_permits\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nORDER BY total_building_permits DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "85c047093b5f4949916775459e355f71",
+        "question": [
+          "Which 10 Community Areas had the most business license issues in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_business_license_issues) AS total_business_license_issues\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nHAVING MEASURE(total_business_license_issues) IS NOT NULL\nORDER BY total_business_license_issues DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b50bd1ac82ab4037aa43e097823797b5",
+        "question": [
+          "Which 10 Community Areas had the most open 311 requests in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(open_311_requests) AS open_311_requests\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nORDER BY open_311_requests DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3c9a0fabec804504bf42dd2ec5e0a66e",
+        "question": [
+          "Which 10 Community Areas had the most open building violations in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(open_building_violations) AS open_building_violations\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nORDER BY open_building_violations DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "574f175b384342448335957deb1c98cc",
+        "question": [
+          "Compare 311 requests, building violations, building permits, and business license issues for Austin, Lake View, West Town, and Lincoln Park in the last completed month."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_311_requests) AS total_311_requests,\n       MEASURE(total_building_violations) AS total_building_violations,\n       MEASURE(total_building_permits) AS total_building_permits,\n       MEASURE(total_business_license_issues) AS total_business_license_issues\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IN ('Austin','Lake View','West Town','Lincoln Park')\nGROUP BY community_area_name\nORDER BY community_area_name"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "a5fcccc50a3a4d71ac037a4db20e22fa",
+        "question": [
+          "Which 10 Community Areas had the highest building permit fees in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_permit_fees) AS total_permit_fees\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nHAVING MEASURE(total_permit_fees) IS NOT NULL\nORDER BY total_permit_fees DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "659395908b244ad7afb53c7a6685ac78",
+        "question": [
+          "Which 10 Community Areas had the most new construction permits in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(new_construction_permits) AS new_construction_permits\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name IS NOT NULL\nGROUP BY community_area_name\nHAVING MEASURE(new_construction_permits) IS NOT NULL\nORDER BY new_construction_permits DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1161b4e8ed10434fba605d87158a1511",
+        "question": [
+          "What were the 15 most common 311 service request types across Chicago in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_311_service_trends)\nSELECT service_request_type,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_311_service_trends\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY service_request_type\nORDER BY total_311_requests DESC\nLIMIT 15"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e1fa55959caa4f70bf11e302b07c2cb9",
+        "question": [
+          "What were the 10 most common 311 service request types in Near West Side in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_311_service_trends)\nSELECT service_request_type,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_311_service_trends\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name = 'Near West Side'\nGROUP BY service_request_type\nORDER BY total_311_requests DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7973213ba7844f4b87d52aced3be01ce",
+        "question": [
+          "What were the 10 most common 311 service request types in O'Hare in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_311_service_trends)\nSELECT service_request_type,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_311_service_trends\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND community_area_name = 'O''Hare'\nGROUP BY service_request_type\nORDER BY total_311_requests DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5dd636ee407040a48020d7c8e280bb1e",
+        "question": [
+          "Which 10 Community Areas had the longest average 311 resolution time in the last completed month, considering only areas with at least 100 resolved requests?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_311_service_trends)\nSELECT community_area_name,\n       MEASURE(resolved_311_requests) AS resolved_311_requests,\n       MEASURE(average_resolution_days) AS average_resolution_days\nFROM workspace.chicagopulse.mv_311_service_trends\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(resolved_311_requests) >= 100\nORDER BY average_resolution_days DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cc6bc2dcc1794bad86ab39d043c3d668",
+        "question": [
+          "Which 15 service request types had the longest average resolution time in the last completed month, considering only types with at least 100 resolved requests?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_311_service_trends)\nSELECT service_request_type,\n       MEASURE(resolved_311_requests) AS resolved_311_requests,\n       MEASURE(average_resolution_days) AS average_resolution_days\nFROM workspace.chicagopulse.mv_311_service_trends\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY service_request_type\nHAVING MEASURE(resolved_311_requests) >= 100\nORDER BY average_resolution_days DESC\nLIMIT 15"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5288e48440ca4b9d98da1287c95f5c31",
+        "question": [
+          "Which 10 Community Areas had the largest month-over-month increase in 311 requests in the latest completed month, considering areas with at least 500 requests in the prior month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n  SELECT metric_month, community_area_name,\n         MEASURE(current_month_311_requests) AS current_value,\n         MEASURE(previous_month_311_requests) AS previous_value,\n         MEASURE(request_mom_change_pct) AS change_pct\n  FROM workspace.chicagopulse.mv_neighborhood_pulse\n  GROUP BY metric_month, community_area_name\n),\nlatest AS (SELECT MAX(metric_month) AS metric_month FROM monthly)\nSELECT community_area_name,\n       current_value,\n       previous_value,\n       change_pct\nFROM monthly\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND previous_value >= 500\n  AND change_pct IS NOT NULL\nORDER BY change_pct DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0c96d9745cde497c982751669df40a8a",
+        "question": [
+          "Which 10 Community Areas had the largest month-over-month decrease in 311 requests in the latest completed month, considering areas with at least 500 requests in the prior month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n  SELECT metric_month, community_area_name,\n         MEASURE(current_month_311_requests) AS current_value,\n         MEASURE(previous_month_311_requests) AS previous_value,\n         MEASURE(request_mom_change_pct) AS change_pct\n  FROM workspace.chicagopulse.mv_neighborhood_pulse\n  GROUP BY metric_month, community_area_name\n),\nlatest AS (SELECT MAX(metric_month) AS metric_month FROM monthly)\nSELECT community_area_name,\n       current_value,\n       previous_value,\n       change_pct\nFROM monthly\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND previous_value >= 500\n  AND change_pct IS NOT NULL\nORDER BY change_pct ASC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "470c368914244a37970fe1606122a0f5",
+        "question": [
+          "Which 10 Community Areas had the largest month-over-month increase in building violations in the latest completed month, considering areas with at least 50 violations in the prior month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n  SELECT metric_month, community_area_name,\n         MEASURE(current_month_violations) AS current_value,\n         MEASURE(previous_month_violations) AS previous_value,\n         MEASURE(violation_mom_change_pct) AS change_pct\n  FROM workspace.chicagopulse.mv_neighborhood_pulse\n  GROUP BY metric_month, community_area_name\n),\nlatest AS (SELECT MAX(metric_month) AS metric_month FROM monthly)\nSELECT community_area_name,\n       current_value,\n       previous_value,\n       change_pct\nFROM monthly\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND previous_value >= 50\n  AND change_pct IS NOT NULL\nORDER BY change_pct DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "16953351b0764c9c944f89ca0c6b535c",
+        "question": [
+          "Show Austin's monthly 311 request volume for the latest 12 completed months."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT metric_month,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE community_area_name = 'Austin'\n  AND metric_month BETWEEN ADD_MONTHS((SELECT metric_month FROM latest),-11)\n                       AND (SELECT metric_month FROM latest)\nGROUP BY metric_month\nORDER BY metric_month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "a7faf6d814c246a9ad6ee8c2dc1132cc",
+        "question": [
+          "Show Chicago's total monthly 311 request volume for the latest 12 completed months."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT metric_month,\n       MEASURE(total_311_requests) AS total_311_requests\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month BETWEEN ADD_MONTHS((SELECT metric_month FROM latest),-11)\n                       AND (SELECT metric_month FROM latest)\nGROUP BY metric_month\nORDER BY metric_month"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0d20fec103704ab99b46af457f8a11df",
+        "question": [
+          "Which Community Areas had at least 3,000 311 requests and at least 100 building violations in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_311_requests) AS total_311_requests,\n       MEASURE(total_building_violations) AS total_building_violations\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(total_311_requests) >= 3000\n   AND MEASURE(total_building_violations) >= 100\nORDER BY total_311_requests DESC, total_building_violations DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d98d811910ec41449ce4cdc61f68f236",
+        "question": [
+          "Which Community Areas had more than 3,000 311 requests but fewer than 20 business license issues in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_311_requests) AS total_311_requests,\n       MEASURE(total_business_license_issues) AS total_business_license_issues\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(total_311_requests) > 3000\n   AND MEASURE(total_business_license_issues) IS NOT NULL\n   AND MEASURE(total_business_license_issues) < 20\nORDER BY total_311_requests DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d805bb796d9c4c319492e1280987cdaa",
+        "question": [
+          "Which Community Areas had both 311 requests and building violations increase by more than 10 percent in the latest completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH monthly AS (\n  SELECT metric_month, community_area_name,\n         MEASURE(request_mom_change_pct) AS request_mom_change_pct,\n         MEASURE(violation_mom_change_pct) AS violation_mom_change_pct\n  FROM workspace.chicagopulse.mv_neighborhood_pulse\n  GROUP BY metric_month, community_area_name\n),\nlatest AS (SELECT MAX(metric_month) AS metric_month FROM monthly)\nSELECT community_area_name,\n       request_mom_change_pct,\n       violation_mom_change_pct\nFROM monthly\nWHERE metric_month = (SELECT metric_month FROM latest)\n  AND request_mom_change_pct > 10\n  AND violation_mom_change_pct > 10\nORDER BY request_mom_change_pct DESC, violation_mom_change_pct DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "78e7577391824141a50e413a974c0dd9",
+        "question": [
+          "Show the 10 Community Areas with the most building permits in the last completed month and include their building violation counts."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_building_permits) AS total_building_permits,\n       MEASURE(total_building_violations) AS total_building_violations\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(total_building_permits) IS NOT NULL\nORDER BY total_building_permits DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d8cba2a509054f959ee476aba47ada79",
+        "question": [
+          "For the 10 Community Areas with the most 311 requests in the last completed month, show 311 requests, building violations, building permits, and business license issues."
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_311_requests) AS total_311_requests,\n       MEASURE(total_building_violations) AS total_building_violations,\n       MEASURE(total_building_permits) AS total_building_permits,\n       MEASURE(total_business_license_issues) AS total_business_license_issues\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nORDER BY total_311_requests DESC\nLIMIT 10"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5c626f879ae144ffba24a0ecd12051f9",
+        "question": [
+          "Which Community Areas had more building violations than building permits in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_building_violations) AS total_building_violations,\n       MEASURE(total_building_permits) AS total_building_permits\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(total_building_violations) IS NOT NULL\n   AND MEASURE(total_building_permits) IS NOT NULL\n   AND MEASURE(total_building_violations) > MEASURE(total_building_permits)\nORDER BY total_building_violations DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fcbf625e30a44c8aafed174f4c22e284",
+        "question": [
+          "Which Community Areas had at least 50 building violations but fewer than 10 building permits in the last completed month?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "WITH latest AS (SELECT MAX(metric_month) AS metric_month FROM workspace.chicagopulse.mv_neighborhood_pulse)\nSELECT community_area_name,\n       MEASURE(total_building_violations) AS total_building_violations,\n       MEASURE(total_building_permits) AS total_building_permits\nFROM workspace.chicagopulse.mv_neighborhood_pulse\nWHERE metric_month = (SELECT metric_month FROM latest)\nGROUP BY community_area_name\nHAVING MEASURE(total_building_violations) >= 50\n   AND MEASURE(total_building_permits) IS NOT NULL\n   AND MEASURE(total_building_permits) < 10\nORDER BY total_building_violations DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "aa414d1b6ff54b9fbfbefcea5d9e61b6",
+        "question": [
+          "When was each ChicagoPulse dataset last ingested?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT dataset, last_ingested_at\nFROM workspace.chicagopulse.gold_data_freshness\nORDER BY dataset"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e685614b192642b9825db6382eb33ff9",
+        "question": [
+          "How many rows does ChicagoPulse currently have for each source dataset?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT dataset, row_count\nFROM workspace.chicagopulse.gold_data_freshness\nORDER BY dataset"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4a80525a8c8647faac3564b346b0f620",
+        "question": [
+          "What date range is stored for each ChicagoPulse source dataset?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT dataset, min_date, max_date\nFROM workspace.chicagopulse.gold_data_freshness\nORDER BY dataset"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

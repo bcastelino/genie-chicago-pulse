@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+app/.venv/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+app/frontend/dist/
+app/frontend/coverage/
+*.tsbuildinfo
+
+# Env / secrets — never commit real values
+.env
+app/.env
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Playwright / test artifacts
+test-results/
+playwright-report/
+screenshots/
+.playwright-cli/
+
+# Local tool and deployment state
+.databricks/
+.devin/
+.impeccable/
+.preview-logs/

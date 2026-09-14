@@ -4,6 +4,17 @@
 
 **Ask Chicago a question. See the neighborhood evidence behind the answer.**
 
+<p>
+  <a href="https://chicagopulse-7474647819672339.aws.databricksapps.com"><img alt="Databricks Apps" src="https://img.shields.io/badge/Databricks-Apps-FF3621?style=flat&amp;logo=databricks&amp;logoColor=white"></a>
+  <a href="https://www.databricks.com/product/ai-bi"><img alt="Databricks Genie" src="https://img.shields.io/badge/Databricks-Genie-1B3139?style=flat&amp;logo=databricks&amp;logoColor=white"></a>
+  <a href="https://react.dev/"><img alt="React 18" src="https://img.shields.io/badge/React-18-20232A?style=flat&amp;logo=react&amp;logoColor=61DAFB"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&amp;logo=typescript&amp;logoColor=white"></a>
+  <a href="https://vite.dev/"><img alt="Vite 6" src="https://img.shields.io/badge/Vite-6-646CFF?style=flat&amp;logo=vite&amp;logoColor=white"></a>
+  <a href="https://fastapi.tiangolo.com/"><img alt="FastAPI 0.115" src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&amp;logo=fastapi&amp;logoColor=white"></a>
+  <a href="https://www.python.org/"><img alt="Python 3.11" src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat&amp;logo=python&amp;logoColor=white"></a>
+  <a href="https://bcastelino.com/blogs/blog/genie-app-wins-databricks-challenge/"><img alt="Read the ChicagoPulse writeup" src="https://img.shields.io/badge/Writeup-Read_the_story-C69214?style=flat&amp;logo=readme&amp;logoColor=white"></a>
+</p>
+
 ![ChicagoPulse Thumbnail](public/chicagopulsehero.png)
 
 ChicagoPulse turns governed City of Chicago open data into plain-language
@@ -18,6 +29,16 @@ without wrestling with raw datasets.
 > require permission in the connected Databricks account.
 
 </div>
+
+## ChicagoPulse wins Gold
+
+ChicagoPulse earned **1st place in Track A: Real World Problem Solving** in the
+**Databricks Genie-Powered App Challenge 2026**, finishing with 35.7 points and
+earning selection for a BrickTalk spotlight.
+
+[![ChicagoPulse wins Gold in the Databricks Genie-Powered App Challenge 2026](public/chicago-pulse-wins.png)](https://bcastelino.com/blogs/blog/genie-app-wins-databricks-challenge/)
+
+[**Read the full ChicagoPulse challenge writeup**](https://bcastelino.com/blogs/blog/genie-app-wins-databricks-challenge/)
 
 ## One city, three ways to explore
 

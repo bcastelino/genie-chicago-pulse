@@ -7,7 +7,12 @@ from functools import lru_cache
 import requests
 from databricks.sdk import WorkspaceClient
 
-from proxy import ConfigurationError, ProxyGateway, ProxySettings, unavailable_response
+from src.proxy import (
+    ConfigurationError,
+    ProxyGateway,
+    ProxySettings,
+    unavailable_response,
+)
 
 
 @lru_cache(maxsize=1)

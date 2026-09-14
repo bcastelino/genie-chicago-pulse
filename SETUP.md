@@ -340,7 +340,7 @@ guidance when creating this identity and grant.
 | Root directory | `appwrite/functions/databricks-proxy` |
 | Runtime | Python 3.12 |
 | Install command | `pip install -r requirements.txt` |
-| Entrypoint | `src/main.py` |
+| Entrypoint | `main.py` |
 | Execute access | `Any` |
 | Appwrite API scopes | None |
 | Git path filter | `appwrite/functions/databricks-proxy/**` |

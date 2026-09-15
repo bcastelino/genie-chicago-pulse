@@ -472,6 +472,18 @@ h3 {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+.source-catalog__table.data tbody td {
+  height: 60px;
+  vertical-align: middle;
+}
+.source-catalog__table.data th:first-child,
+.source-catalog__table.data td:first-child {
+  padding-left: var(--sp-4);
+}
+.source-catalog__table.data th:last-child,
+.source-catalog__table.data td:last-child {
+  padding-right: var(--sp-4);
+}
 .source-catalog__table .source-catalog__rows {
   white-space: nowrap;
 }
@@ -486,7 +498,7 @@ h3 {
   white-space: normal;
 }
 .source-catalog__col--dataset {
-  width: 18%;
+  width: 19%;
 }
 .source-catalog__col--status {
   width: 15%;
@@ -504,7 +516,7 @@ h3 {
   width: 18%;
 }
 .source-catalog__col--last-ingested {
-  width: 17%;
+  width: 16%;
 }
 .source-row--active {
   background: var(--ok-soft);
@@ -2297,7 +2309,7 @@ table.data tbody tr:last-child td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .source-catalog__col--dataset {
-    width: 24%;
+    width: 25%;
   }
   .source-catalog__col--status {
     width: 19%;
@@ -2309,7 +2321,7 @@ table.data tbody tr:last-child td {
     width: 24%;
   }
   .source-catalog__col--last-ingested {
-    width: 22%;
+    width: 21%;
   }
   .source-catalog__col--category,
   .source-catalog__col--socrata,
@@ -2345,6 +2357,9 @@ table.data tbody tr:last-child td {
   .source-catalog__table.data td {
     padding: var(--sp-2) var(--sp-1);
   }
+  .source-catalog__table.data tbody td {
+    height: auto;
+  }
   .source-catalog__col--dataset {
     width: 41%;
   }
@@ -2353,6 +2368,10 @@ table.data tbody tr:last-child td {
   }
   .source-catalog__col--coverage {
     width: 27%;
+  }
+  .source-catalog__table.data th.source-catalog__coverage,
+  .source-catalog__table.data td.source-catalog__coverage {
+    padding-right: var(--sp-4);
   }
   .source-catalog__col--rows,
   .source-catalog__col--last-ingested,

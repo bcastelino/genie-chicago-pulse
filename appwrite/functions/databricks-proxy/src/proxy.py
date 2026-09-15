@@ -388,6 +388,19 @@ class ProxyGateway:
         if status_code == 204 or not response_text:
             return _empty_response(context, status_code, response_headers)
 
+        upstream_headers = getattr(upstream, "headers", {}) or {}
+        content_type = (
+            _header(upstream_headers, "Content-Type")
+            if isinstance(upstream_headers, Mapping)
+            else None
+        ) or ""
+        context.log(
+            "Databricks App response: "
+            f"status={status_code}, "
+            f"content_type={content_type!r}, "
+            f"body_length={len(response_text)}"
+        )
+
         try:
             payload = json.loads(response_text)
         except (TypeError, ValueError):

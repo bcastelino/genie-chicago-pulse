@@ -36,9 +36,13 @@ class FakeContext:
         )
         self.res = FakeResponseBuilder()
         self.errors: list[str] = []
+        self.logs: list[str] = []
 
     def error(self, message):
         self.errors.append(message)
+
+    def log(self, message):
+        self.logs.append(message)
 
 
 class FakeWorkspaceConfig:
@@ -283,6 +287,24 @@ def test_redirect_and_non_json_responses_are_sanitized(settings):
     assert first.status_code == 502
     assert second.status_code == 502
     assert "workspace login" not in json.dumps(second.body)
+
+
+def test_non_json_response_logs_only_safe_metadata(settings):
+    response_text = "<html>Databricks sign in</html>"
+    invalid = FakeUpstreamResponse()
+    invalid.text = response_text
+    invalid.headers = {"content-type": "text/html; charset=utf-8"}
+    gateway, _, _ = make_gateway(settings, [invalid])
+    context = FakeContext()
+
+    result = gateway.handle(context)
+
+    diagnostic = "\n".join(context.logs)
+    assert result.status_code == 502
+    assert "status=200" in diagnostic
+    assert "content_type='text/html; charset=utf-8'" in diagnostic
+    assert f"body_length={len(response_text)}" in diagnostic
+    assert response_text not in diagnostic
 
 
 def test_malformed_upstream_status_is_sanitized(settings):

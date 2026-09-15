@@ -273,7 +273,7 @@ Required terminal states:
 - app: `RUNNING`
 - compute: `ACTIVE`
 
-Live app:
+Databricks live app:
 [chicagopulse-7474647819672339.aws.databricksapps.com](https://chicagopulse-7474647819672339.aws.databricksapps.com)
 
 ## Deploy with Appwrite Sites and Functions
@@ -360,9 +360,11 @@ The generated Function domain normally looks like
 | Output directory | `./dist` |
 | SPA fallback | `index.html` |
 | Git path filter | `app/frontend/**` |
+| Production URL | `https://chicagopulse.appwrite.network/` |
 
-The generated Site domain normally looks like
-`https://<site-id>.appwrite.network`. Add that exact origin to
+The public Site is
+[chicagopulse.appwrite.network](https://chicagopulse.appwrite.network/). Configure
+its exact origin, `https://chicagopulse.appwrite.network`, in
 `ALLOWED_ORIGINS`. Preview deployments do not receive API access automatically;
 add a preview's exact origin and redeploy the Function when one needs access.
 

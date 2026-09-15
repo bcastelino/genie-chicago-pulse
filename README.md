@@ -5,6 +5,7 @@
 **Ask Chicago a question. See the neighborhood evidence behind the answer.**
 
 <p>
+  <a href="https://chicagopulse.appwrite.network/"><img alt="Open the live ChicagoPulse Appwrite Site" src="https://img.shields.io/badge/Appwrite-Live_Site-FD366E?style=flat&amp;logo=appwrite&amp;logoColor=white"></a>
   <a href="https://chicagopulse-7474647819672339.aws.databricksapps.com"><img alt="Databricks Apps" src="https://img.shields.io/badge/Databricks-Apps-FF3621?style=flat&amp;logo=databricks&amp;logoColor=white"></a>
   <a href="https://www.databricks.com/product/ai-bi"><img alt="Databricks Genie" src="https://img.shields.io/badge/Databricks-Genie-1B3139?style=flat&amp;logo=databricks&amp;logoColor=white"></a>
   <a href="https://react.dev/"><img alt="React 18" src="https://img.shields.io/badge/React-18-20232A?style=flat&amp;logo=react&amp;logoColor=61DAFB"></a>
@@ -23,11 +24,11 @@ signals. It is powered by Databricks Genie and built for residents, community
 organizations, civic-data practitioners, and anyone who wants local context
 without wrestling with raw datasets.
 
-[**Open ChicagoPulse**](https://chicagopulse-7474647819672339.aws.databricksapps.com)
+[**Open ChicagoPulse**](https://chicagopulse.appwrite.network/)
 
-> ChicagoPulse runs as a Databricks App. Access to the live experience may
-> require permission in the connected Databricks account. The same frontend can
-> also be hosted publicly with Appwrite Sites and a restricted Appwrite Function.
+> The public experience runs on Appwrite Sites through a restricted Appwrite
+> Function, backed by the ChicagoPulse Databricks App. The governed Databricks
+> deployment remains a first-class target for authorized workspace users.
 
 </div>
 
@@ -119,7 +120,7 @@ One GitHub repository
         |      React + FastAPI, same-origin /api/*
         |
         `-- Appwrite Sites: app/frontend/
-               https://<site-id>.appwrite.network
+               https://chicagopulse.appwrite.network/
                          |
                          v
                Appwrite Function gateway
@@ -143,11 +144,12 @@ local development.
 
 ## Project status
 
-The production snapshot is live on Databricks Apps Free Edition. The current
+The public Appwrite Site is live at
+[chicagopulse.appwrite.network](https://chicagopulse.appwrite.network/), backed
+by the production snapshot on Databricks Apps Free Edition. The current
 application includes the Chicago-at-dusk responsive interface, centered desktop
 navigation, mobile bottom navigation, a global footer, answer feedback, the
 task-level pipeline visualization, and the expanded Data Health source catalog.
-Appwrite support is repository-ready but is not presented here as deployed.
 
 ## Contributing and running locally
 

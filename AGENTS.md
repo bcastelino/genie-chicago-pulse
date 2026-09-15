@@ -13,6 +13,8 @@
 
 ## Current application state
 
+- Public Appwrite Site: `https://chicagopulse.appwrite.network/`, backed by the
+  restricted Appwrite Function proxy to the ChicagoPulse Databricks App.
 - Routes: `/`, `/ask`, `/neighborhoods`, and `/data-health`.
 - Ask includes live Genie metadata, multi-turn conversation links, chart/table/
   SQL/provenance views, suggested follow-ups, and answer feedback.

@@ -33,9 +33,17 @@ describe("AskPage", () => {
         name: /Which 10 Chicago neighborhoods had the most 311 requests/i,
       }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByText(/Capabilities, limits/i));
+    fireEvent.click(screen.getByText("Capabilities and limitations"));
     expect(screen.getByText(/Monthly neighborhood trends/i)).toBeInTheDocument();
-    expect(screen.getByText("space-123")).toBeInTheDocument();
+    expect(screen.getByText("Last updated")).toBeInTheDocument();
+    expect(screen.getByText("Data source")).toBeInTheDocument();
+    expect(screen.getByText("City of Chicago open data")).toBeInTheDocument();
+    expect(screen.getByText("Analysis scope")).toBeInTheDocument();
+    expect(screen.getByText("Completed monthly community-area trends")).toBeInTheDocument();
+    expect(screen.queryByText("Space ID")).not.toBeInTheDocument();
+    expect(screen.queryByText("Warehouse")).not.toBeInTheDocument();
+    expect(screen.queryByText(agent.space_id)).not.toBeInTheDocument();
+    expect(screen.queryByText(agent.warehouse_id)).not.toBeInTheDocument();
   });
 
   it("adds and clears the active Databricks conversation link", async () => {

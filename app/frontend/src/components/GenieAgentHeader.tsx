@@ -56,7 +56,7 @@ export function GenieAgentHeader({
         <details className="agent-profile__details">
           <summary>
             <span>
-              <IconChevron size={15} /> Capabilities, limits, and technical details
+              <IconChevron size={15} /> Capabilities and limitations
             </span>
           </summary>
           <div className="agent-profile__detail-grid">
@@ -70,12 +70,12 @@ export function GenieAgentHeader({
                 <dd>{agent.updated_at ? formatDateTime(agent.updated_at) : "—"}</dd>
               </div>
               <div>
-                <dt>Space ID</dt>
-                <dd>{agent.space_id}</dd>
+                <dt>Data source</dt>
+                <dd>City of Chicago open data</dd>
               </div>
               <div>
-                <dt>Warehouse</dt>
-                <dd>{agent.warehouse_id ?? "—"}</dd>
+                <dt>Analysis scope</dt>
+                <dd>Completed monthly community-area trends</dd>
               </div>
             </dl>
           </div>

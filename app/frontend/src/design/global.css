@@ -456,6 +456,56 @@ h3 {
   color: var(--text-muted);
   font-size: var(--fs-13);
 }
+.source-catalog__table-wrap {
+  width: 100%;
+  max-width: 100%;
+  border-top: 1px solid var(--border);
+}
+.source-catalog__table {
+  width: 100%;
+  table-layout: fixed;
+}
+.source-catalog__table.data th,
+.source-catalog__table.data td {
+  padding: var(--sp-2);
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.source-catalog__table .source-catalog__rows {
+  white-space: nowrap;
+}
+.source-catalog__table td.source-catalog__socrata {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  white-space: nowrap !important;
+}
+.source-catalog__table .source-status {
+  max-width: 100%;
+  line-height: var(--lh-snug);
+  white-space: normal;
+}
+.source-catalog__col--dataset {
+  width: 18%;
+}
+.source-catalog__col--status {
+  width: 15%;
+}
+.source-catalog__col--category {
+  width: 14%;
+}
+.source-catalog__col--socrata {
+  width: 10%;
+}
+.source-catalog__col--rows {
+  width: 8%;
+}
+.source-catalog__col--coverage {
+  width: 18%;
+}
+.source-catalog__col--last-ingested {
+  width: 17%;
+}
 .source-row--active {
   background: var(--ok-soft);
 }
@@ -1150,8 +1200,7 @@ table.data tbody tr:last-child td {
 }
 .agent-profile__detail-grid dd {
   margin: 2px 0 0;
-  font-family: var(--font-mono);
-  font-size: var(--fs-12);
+  font-size: var(--fs-13);
   overflow-wrap: anywhere;
 }
 .ask-thread {
@@ -2247,6 +2296,27 @@ table.data tbody tr:last-child td {
   .health-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .source-catalog__col--dataset {
+    width: 24%;
+  }
+  .source-catalog__col--status {
+    width: 19%;
+  }
+  .source-catalog__col--rows {
+    width: 11%;
+  }
+  .source-catalog__col--coverage {
+    width: 24%;
+  }
+  .source-catalog__col--last-ingested {
+    width: 22%;
+  }
+  .source-catalog__col--category,
+  .source-catalog__col--socrata,
+  .source-catalog__category,
+  .source-catalog__socrata {
+    display: none;
+  }
   .map-workspace {
     grid-template-columns: 320px minmax(0, 1fr);
   }
@@ -2267,6 +2337,28 @@ table.data tbody tr:last-child td {
 @media (max-width: 720px) {
   .health-overview {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .source-catalog__table {
+    font-size: var(--fs-12);
+  }
+  .source-catalog__table.data th,
+  .source-catalog__table.data td {
+    padding: var(--sp-2) var(--sp-1);
+  }
+  .source-catalog__col--dataset {
+    width: 41%;
+  }
+  .source-catalog__col--status {
+    width: 32%;
+  }
+  .source-catalog__col--coverage {
+    width: 27%;
+  }
+  .source-catalog__col--rows,
+  .source-catalog__col--last-ingested,
+  .source-catalog__rows,
+  .source-catalog__last-ingested {
+    display: none;
   }
   .pipeline-panel--preflight,
   .pipeline-panel__footer,

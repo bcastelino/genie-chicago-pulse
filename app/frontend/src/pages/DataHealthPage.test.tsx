@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataHealthPage } from "./DataHealthPage";
 
@@ -62,6 +62,23 @@ describe("DataHealthPage pipeline control", () => {
 
     render(<DataHealthPage />);
     await screen.findByText("Operational");
+    const sourceTable = screen.getByRole("table", {
+      name: "ChicagoPulse source datasets and ingestion coverage",
+    });
+    expect(within(sourceTable).getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
+      "Dataset",
+      "Status",
+      "Category",
+      "Socrata ID",
+      "Rows",
+      "Coverage",
+      "Last ingested",
+    ]);
+    expect(within(sourceTable).getAllByRole("row")).toHaveLength(health.datasets.length + 1);
+    expect(within(sourceTable).getByRole("link", { name: "311 Service Requests" })).toHaveAttribute(
+      "href",
+      "https://data.cityofchicago.org/d/v6vf-nfxy",
+    );
     expect(screen.getByRole("link", { name: "Visit the City of Chicago Data Portal" })).toHaveAttribute(
       "href",
       "https://data.cityofchicago.org/",

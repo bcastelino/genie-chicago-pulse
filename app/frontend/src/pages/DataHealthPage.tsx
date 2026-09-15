@@ -189,47 +189,61 @@ export function DataHealthPage() {
                 or available to Genie.
               </p>
             </div>
-            <div className="table-wrap" style={{ border: "none", borderTop: "1px solid var(--border)" }}>
-              <table className="data">
+            <div className="source-catalog__table-wrap">
+              <table className="data source-catalog__table">
+                <caption className="visually-hidden">
+                  ChicagoPulse source datasets and ingestion coverage
+                </caption>
+                <colgroup>
+                  <col className="source-catalog__col source-catalog__col--dataset" />
+                  <col className="source-catalog__col source-catalog__col--status" />
+                  <col className="source-catalog__col source-catalog__col--category" />
+                  <col className="source-catalog__col source-catalog__col--socrata" />
+                  <col className="source-catalog__col source-catalog__col--rows" />
+                  <col className="source-catalog__col source-catalog__col--coverage" />
+                  <col className="source-catalog__col source-catalog__col--last-ingested" />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th scope="col">Dataset</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Socrata ID</th>
-                    <th scope="col" className="num">Rows</th>
-                    <th scope="col">Coverage</th>
-                    <th scope="col">Last ingested</th>
+                    <th scope="col" className="source-catalog__dataset">Dataset</th>
+                    <th scope="col" className="source-catalog__status">Status</th>
+                    <th scope="col" className="source-catalog__category">Category</th>
+                    <th scope="col" className="source-catalog__socrata">Socrata ID</th>
+                    <th scope="col" className="num source-catalog__rows">Rows</th>
+                    <th scope="col" className="source-catalog__coverage">Coverage</th>
+                    <th scope="col" className="source-catalog__last-ingested">Last ingested</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.datasets.map((d) => (
                     <tr key={d.dataset} className={d.usage_status === "in_use" ? "source-row--active" : "source-row--future"}>
-                      <td>
+                      <td className="source-catalog__dataset">
                         {d.source_url ? (
                           <a href={d.source_url} target="_blank" rel="noreferrer">
                             {d.dataset}
                           </a>
                         ) : d.dataset}
                       </td>
-                      <td>
+                      <td className="source-catalog__status">
                         <span className={`source-status source-status--${d.usage_status}`}>
                           {d.usage_status === "in_use" ? "In ChicagoPulse" : "Potential future source"}
                         </span>
                       </td>
-                      <td>{d.category ?? "—"}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "var(--fs-12)" }}>
+                      <td className="source-catalog__category">{d.category ?? "—"}</td>
+                      <td className="source-catalog__socrata">
                         {d.source_url && d.socrata_id ? (
                           <a href={d.source_url} target="_blank" rel="noreferrer">
                             {d.socrata_id}
                           </a>
                         ) : d.socrata_id ?? "—"}
                       </td>
-                      <td className="num tnum">{formatCompact(d.row_count)}</td>
-                      <td>
+                      <td className="num tnum source-catalog__rows">{formatCompact(d.row_count)}</td>
+                      <td className="source-catalog__coverage">
                         {d.min_date ? `${formatDate(d.min_date)} – ${formatDate(d.max_date)}` : "—"}
                       </td>
-                      <td>{d.last_ingested_at ? formatDateTime(d.last_ingested_at) : "—"}</td>
+                      <td className="source-catalog__last-ingested">
+                        {d.last_ingested_at ? formatDateTime(d.last_ingested_at) : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

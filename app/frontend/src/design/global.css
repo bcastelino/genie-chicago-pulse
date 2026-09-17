@@ -1017,6 +1017,29 @@ table.data tbody tr:last-child td {
 .state--inline {
   padding: var(--sp-5);
 }
+.state--service {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.state--service p {
+  max-width: 62ch;
+}
+.state--service .state__icon {
+  color: var(--copper-strong);
+}
+.state--service-ready .state__icon {
+  color: var(--ok);
+}
+.state__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.state__progress {
+  width: min(100%, 360px);
+}
 
 /* Skeleton shimmer */
 .skeleton {

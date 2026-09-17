@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ApiError, api } from "../api/client";
 import type { DataHealthResponse, PipelineRunResponse } from "../api/types";
 import { PipelineRunPanel } from "../components/PipelineRunPanel";
-import { ErrorState, Skeleton } from "../components/States";
+import { LiveServiceErrorState } from "../components/LiveServiceErrorState";
+import { Skeleton } from "../components/States";
 import { IconDatabase, IconPlay, IconRefresh } from "../components/icons";
 import { runtimeConfig } from "../config/runtime";
 import { formatCompact, formatDate, formatDateTime } from "../lib/format";
@@ -30,7 +31,7 @@ function SummaryTile({ label, value }: { label: string; value: string }) {
 export function DataHealthPage() {
   const [data, setData] = useState<DataHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pipelineRun, setPipelineRun] = useState<PipelineRunResponse | null>(null);
   const [triggering, setTriggering] = useState(false);
   const [triggerError, setTriggerError] = useState<string | null>(null);
@@ -43,7 +44,11 @@ export function DataHealthPage() {
     try {
       setData(await api.dataHealth());
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Unable to load data health.");
+      setError(
+        err instanceof ApiError
+          ? err
+          : new ApiError("Unable to load data health.", 0),
+      );
     } finally {
       setLoading(false);
     }
@@ -113,7 +118,7 @@ export function DataHealthPage() {
 
       {!loading && error && (
         <div className="card card--pad">
-          <ErrorState message={error} onRetry={load} />
+          <LiveServiceErrorState error={error} onRetry={load} />
         </div>
       )}
 

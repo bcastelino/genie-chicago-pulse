@@ -17,6 +17,7 @@ from src.proxy import (  # noqa: E402
     ConfigurationError,
     ProxyGateway,
     ProxySettings,
+    WakeSettings,
     unavailable_response,
 )
 
@@ -30,7 +31,29 @@ def _gateway() -> ProxyGateway:
         client_secret=settings.databricks_client_secret,
         auth_type="oauth-m2m",
     )
-    return ProxyGateway(settings, workspace_client, requests.Session())
+    wake_settings = None
+    wake_workspace_client = None
+    try:
+        wake_settings = WakeSettings.from_env(settings.databricks_host)
+        wake_workspace_client = WorkspaceClient(
+            host=wake_settings.databricks_host,
+            client_id=wake_settings.databricks_client_id,
+            client_secret=wake_settings.databricks_client_secret,
+            auth_type="oauth-m2m",
+            scopes=["apps"],
+        )
+    except Exception:
+        # Normal gateway traffic must remain available when optional wake
+        # credentials are absent or incomplete. The wake route returns a
+        # controlled, sanitized configuration error when called.
+        pass
+    return ProxyGateway(
+        settings,
+        workspace_client,
+        requests.Session(),
+        wake_settings,
+        wake_workspace_client,
+    )
 
 
 def main(context):

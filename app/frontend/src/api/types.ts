@@ -7,6 +7,10 @@ export interface Health {
   version: string;
 }
 
+export interface WakeRuntimeResponse {
+  status: "ready" | "starting";
+}
+
 export type MessageStatus =
   | "IN_PROGRESS"
   | "COMPLETED"

@@ -1,10 +1,11 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { api } from "../api/client";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { ApiError, api } from "../api/client";
 import type { FeedbackRating, FeedbackReason, GenieAgent, GenieMessage } from "../api/types";
 import { AutoChart } from "../components/lazy";
 import { chooseChart } from "../components/chartSpec";
 import { CopyButton } from "../components/CopyButton";
 import { GenieAgentHeader } from "../components/GenieAgentHeader";
+import { LiveServiceErrorState } from "../components/LiveServiceErrorState";
 import { ProvenanceContent } from "../components/ProvenanceDetails";
 import { ResultTable } from "../components/ResultTable";
 import { SqlResultPanel } from "../components/SqlDisclosure";
@@ -23,6 +24,7 @@ import {
 import { renderMarkdown } from "../lib/markdown";
 import type { Turn } from "../lib/useConversation";
 import { useConversation } from "../lib/useConversation";
+import { isWakeableServiceError } from "../hooks/useLiveServiceRecovery";
 
 const MAX_LEN = 1000;
 const MAX_FEEDBACK_COMMENT = 500;
@@ -344,23 +346,34 @@ export function AskPage() {
   const { turns, busy, ask, retryLast, reset, conversationId } = useConversation();
   const [text, setText] = useState("");
   const [agent, setAgent] = useState<GenieAgent | null>(null);
-  const [agentError, setAgentError] = useState<string | null>(null);
+  const [agentError, setAgentError] = useState<ApiError | null>(null);
+  const agentMounted = useRef(true);
   const threadEnd = useRef<HTMLDivElement>(null);
   const questionInput = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    let active = true;
-    api.genieAgent()
-      .then((next) => {
-        if (active) setAgent(next);
-      })
-      .catch(() => {
-        if (active) setAgentError("Unable to load Genie Agent details.");
-      });
-    return () => {
-      active = false;
-    };
+  const loadAgent = useCallback(async () => {
+    setAgentError(null);
+    try {
+      const next = await api.genieAgent();
+      if (agentMounted.current) setAgent(next);
+    } catch (error) {
+      if (agentMounted.current) {
+        setAgentError(
+          error instanceof ApiError
+            ? error
+            : new ApiError("Unable to load Genie Agent details.", 0),
+        );
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    agentMounted.current = true;
+    void loadAgent();
+    return () => {
+      agentMounted.current = false;
+    };
+  }, [loadAgent]);
 
   useEffect(() => {
     threadEnd.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
@@ -379,6 +392,23 @@ export function AskPage() {
     window.requestAnimationFrame(() => questionInput.current?.focus());
   };
 
+  if (agentError && isWakeableServiceError(agentError)) {
+    return (
+      <div className="stack">
+        <div className="page-head">
+          <h1>Ask ChicagoPulse</h1>
+          <p>
+            Ask about Chicago 311 requests, building permits, business licenses, and violations in
+            plain English. Answers come from governed city data through Databricks Genie.
+          </p>
+        </div>
+        <div className="card card--pad">
+          <LiveServiceErrorState error={agentError} onRetry={loadAgent} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ask-workspace">
       <div className="page-head">
@@ -389,7 +419,11 @@ export function AskPage() {
         </p>
       </div>
 
-      <GenieAgentHeader agent={agent} error={agentError} conversationId={conversationId} />
+      <GenieAgentHeader
+        agent={agent}
+        error={agentError?.message ?? null}
+        conversationId={conversationId}
+      />
 
       {turns.length === 0 ? (
         <div className="card card--pad">

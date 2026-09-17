@@ -9,6 +9,7 @@ import type {
 } from "../api/types";
 import { AutoChart, ChoroplethMap } from "../components/lazy";
 import { MetricCard } from "../components/MetricCard";
+import { LiveServiceErrorState } from "../components/LiveServiceErrorState";
 import { NeighborhoodSelect } from "../components/NeighborhoodSelect";
 import { ResultTable } from "../components/ResultTable";
 import { EmptyState, ErrorState, Skeleton } from "../components/States";
@@ -52,11 +53,11 @@ function PulseMetricGrid({
 }: {
   pulse: NeighborhoodPulse | null;
   loading: boolean;
-  error: string | null;
+  error: ApiError | null;
   onRetry: () => void;
 }) {
   if (loading) return <MetricCardsSkeleton />;
-  if (error) return <ErrorState message={error} onRetry={onRetry} />;
+  if (error) return <LiveServiceErrorState error={error} onRetry={onRetry} />;
   if (!pulse) {
     return <EmptyState title="No data yet" message="This neighborhood has no metrics for the latest month." />;
   }
@@ -85,8 +86,8 @@ export function NeighborhoodPulsePage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [pulse, setPulse] = useState<NeighborhoodPulse | null>(null);
   const [pulseLoading, setPulseLoading] = useState(true);
-  const [pulseError, setPulseError] = useState<string | null>(null);
-  const [initError, setInitError] = useState<string | null>(null);
+  const [pulseError, setPulseError] = useState<ApiError | null>(null);
+  const [initError, setInitError] = useState<ApiError | null>(null);
 
   const [compareCas, setCompareCas] = useState<number[]>([]);
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
@@ -107,7 +108,11 @@ export function NeighborhoodPulsePage() {
       setSelected(initial);
       if (initial) setCompareCas([initial]);
     } catch (err) {
-      setInitError(err instanceof ApiError ? err.message : "Unable to load neighborhoods.");
+      setInitError(
+        err instanceof ApiError
+          ? err
+          : new ApiError("Unable to load neighborhoods.", 0),
+      );
     }
   }, []);
 
@@ -122,7 +127,11 @@ export function NeighborhoodPulsePage() {
       setPulse(await api.pulse(ca));
     } catch (err) {
       setPulse(null);
-      setPulseError(err instanceof ApiError ? err.message : "Unable to load neighborhood data.");
+      setPulseError(
+        err instanceof ApiError
+          ? err
+          : new ApiError("Unable to load neighborhood data.", 0),
+      );
     } finally {
       setPulseLoading(false);
     }
@@ -173,7 +182,7 @@ export function NeighborhoodPulsePage() {
           <h1>Neighborhood Pulse</h1>
         </div>
         <div className="card card--pad">
-          <ErrorState message={initError} onRetry={loadInit} />
+          <LiveServiceErrorState error={initError} onRetry={loadInit} />
         </div>
       </div>
     );

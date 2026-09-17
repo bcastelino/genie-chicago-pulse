@@ -51,6 +51,47 @@ describe("API client runtime URLs", () => {
     );
   });
 
+  it("preserves the structured Appwrite service-unavailable error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: "ChicagoPulse live services are currently unavailable.",
+            code: "DATABRICKS_APP_UNAVAILABLE",
+            wake_available: true,
+          }),
+          { status: 503 },
+        ),
+      ),
+    );
+
+    const { api } = await import("./client");
+    await expect(api.dataHealth()).rejects.toEqual(
+      expect.objectContaining({
+        status: 503,
+        code: "DATABRICKS_APP_UNAVAILABLE",
+        wakeAvailable: true,
+      }),
+    );
+  });
+
+  it("posts to the fixed runtime wake endpoint", async () => {
+    vi.stubEnv("VITE_DEPLOYMENT_TARGET", "appwrite");
+    vi.stubEnv("VITE_API_BASE_URL", "https://proxy.example.appwrite.run");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ status: "starting" }), { status: 202 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { api } = await import("./client");
+    await expect(api.wakeRuntime()).resolves.toEqual({ status: "starting" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://proxy.example.appwrite.run/api/runtime/wake",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
   it("preserves network error behavior", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
 

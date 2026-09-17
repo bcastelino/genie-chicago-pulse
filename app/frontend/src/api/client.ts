@@ -16,15 +16,26 @@ import type {
   Neighborhood,
   NeighborhoodPulse,
   PipelineRunResponse,
+  WakeRuntimeResponse,
 } from "./types";
 import { apiUrl } from "../config/runtime";
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  wakeAvailable?: boolean;
+
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    wakeAvailable?: boolean,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
+    this.wakeAvailable = wakeAvailable;
   }
 }
 
@@ -40,20 +51,30 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!resp.ok) {
     let detail = `Request failed (${resp.status}).`;
+    let code: string | undefined;
+    let wakeAvailable: boolean | undefined;
     try {
-      const body = await resp.json();
-      detail = body.detail || body.error || detail;
+      const body = (await resp.json()) as Record<string, unknown>;
+      if (typeof body.detail === "string") detail = body.detail;
+      else if (typeof body.error === "string") detail = body.error;
+      if (typeof body.code === "string") code = body.code;
+      if (typeof body.wake_available === "boolean") {
+        wakeAvailable = body.wake_available;
+      }
     } catch {
       /* keep default */
     }
-    throw new ApiError(detail, resp.status);
+    throw new ApiError(detail, resp.status, code, wakeAvailable);
   }
   if (resp.status === 204) return undefined as T;
   return (await resp.json()) as T;
 }
 
 export const api = {
-  health: () => request<Health>("/api/health"),
+  health: (init?: RequestInit) => request<Health>("/api/health", init),
+
+  wakeRuntime: () =>
+    request<WakeRuntimeResponse>("/api/runtime/wake", { method: "POST" }),
 
   genieAgent: () => request<GenieAgent>("/api/genie-agent"),
 

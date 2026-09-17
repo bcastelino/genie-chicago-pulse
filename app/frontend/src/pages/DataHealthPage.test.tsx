@@ -40,6 +40,27 @@ afterEach(() => {
 });
 
 describe("DataHealthPage pipeline control", () => {
+  it("keeps the normal error state in the Databricks deployment", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({
+          error: "ChicagoPulse live services are currently unavailable.",
+          code: "DATABRICKS_APP_UNAVAILABLE",
+          wake_available: true,
+        }), { status: 503 }),
+      ),
+    );
+
+    render(<DataHealthPage />);
+
+    expect(
+      await screen.findByText("ChicagoPulse live services are currently unavailable."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start live service" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try Again" })).toBeInTheDocument();
+  });
+
   it("opens inline confirmation before triggering the allowlisted pipeline endpoint", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify(health), { status: 200 }))

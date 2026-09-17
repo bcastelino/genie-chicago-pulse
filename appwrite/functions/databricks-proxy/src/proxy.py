@@ -6,6 +6,8 @@ import json
 import math
 import os
 import re
+import threading
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -18,6 +20,9 @@ _MAX_UPSTREAM_TIMEOUT_SECONDS = 25.0
 _CONNECT_TIMEOUT_SECONDS = 3.05
 _DATABRICKS_APPS_SUFFIX = ".databricksapps.com"
 _JSON_CONTENT_TYPE = "application/json"
+_WAKE_PATH = "/api/runtime/wake"
+_WAKE_COOLDOWN_SECONDS = 60.0
+_CHICAGO_PULSE_APP_NAME = "chicagopulse"
 
 
 class ConfigurationError(RuntimeError):
@@ -129,6 +134,35 @@ class ProxySettings:
 
 
 @dataclass(frozen=True)
+class WakeSettings:
+    databricks_host: str
+    databricks_client_id: str
+    databricks_client_secret: str = field(repr=False)
+    databricks_app_name: str = _CHICAGO_PULSE_APP_NAME
+
+    @classmethod
+    def from_env(
+        cls,
+        databricks_host: str,
+        env: Mapping[str, str] | None = None,
+    ) -> WakeSettings:
+        source = os.environ if env is None else env
+        app_name = _required(source, "DATABRICKS_APP_NAME")
+        if app_name != _CHICAGO_PULSE_APP_NAME:
+            raise ConfigurationError(
+                f"DATABRICKS_APP_NAME must be {_CHICAGO_PULSE_APP_NAME!r}"
+            )
+        return cls(
+            databricks_host=databricks_host,
+            databricks_client_id=_required(source, "DATABRICKS_WAKE_CLIENT_ID"),
+            databricks_client_secret=_required(
+                source, "DATABRICKS_WAKE_CLIENT_SECRET"
+            ),
+            databricks_app_name=app_name,
+        )
+
+
+@dataclass(frozen=True)
 class Route:
     method: str
     pattern: re.Pattern[str]
@@ -144,6 +178,7 @@ _PUBLIC_ROUTES = (
     Route("GET", re.compile(r"^/api/neighborhoods/compare$")),
     Route("GET", re.compile(r"^/api/neighborhoods/[0-9]{1,3}/pulse$")),
     Route("GET", re.compile(r"^/api/data-health$")),
+    Route("POST", re.compile(rf"^{_WAKE_PATH}$")),
     Route(
         "GET",
         re.compile(
@@ -171,6 +206,16 @@ class WorkspaceConfig(Protocol):
 
 class WorkspaceClientLike(Protocol):
     config: WorkspaceConfig
+
+
+class AppsApiLike(Protocol):
+    def get(self, name: str) -> Any: ...
+
+    def start(self, name: str) -> Any: ...
+
+
+class WakeWorkspaceClientLike(Protocol):
+    apps: AppsApiLike
 
 
 class HttpClient(Protocol):
@@ -261,16 +306,40 @@ def unavailable_response(context: Any) -> Any:
     )
 
 
+def _databricks_app_unavailable_response(
+    context: Any, headers: Mapping[str, str]
+) -> Any:
+    return _json_response(
+        context,
+        {
+            "error": "ChicagoPulse live services are currently unavailable.",
+            "code": "DATABRICKS_APP_UNAVAILABLE",
+            "wake_available": True,
+        },
+        503,
+        headers,
+    )
+
+
 class ProxyGateway:
     def __init__(
         self,
         settings: ProxySettings,
         workspace_client: WorkspaceClientLike,
         http_client: HttpClient,
+        wake_settings: WakeSettings | None = None,
+        wake_workspace_client: WakeWorkspaceClientLike | None = None,
+        *,
+        clock: Any = time.monotonic,
     ) -> None:
         self._settings = settings
         self._workspace_client = workspace_client
         self._http_client = http_client
+        self._wake_settings = wake_settings
+        self._wake_workspace_client = wake_workspace_client
+        self._clock = clock
+        self._wake_lock = threading.Lock()
+        self._last_wake_at: float | None = None
 
     def handle(self, context: Any) -> Any:
         req = context.req
@@ -313,6 +382,9 @@ class ProxyGateway:
             return _error_response(
                 context, "Only JSON request bodies are supported.", 415, response_headers
             )
+
+        if path == _WAKE_PATH:
+            return self._handle_wake(context, query_string, body, response_headers)
 
         try:
             generated_headers = self._workspace_client.config.authenticate()
@@ -385,7 +457,7 @@ class ProxyGateway:
                 context, "The upstream service returned an invalid response.", 502, response_headers
             )
 
-        if status_code == 204 or not response_text:
+        if status_code == 204:
             return _empty_response(context, status_code, response_headers)
 
         upstream_headers = getattr(upstream, "headers", {}) or {}
@@ -401,10 +473,21 @@ class ProxyGateway:
             f"body_length={len(response_text)}"
         )
 
+        if not response_text:
+            if status_code == 503:
+                return _databricks_app_unavailable_response(
+                    context, response_headers
+                )
+            return _empty_response(context, status_code, response_headers)
+
         try:
             payload = json.loads(response_text)
         except (TypeError, ValueError):
             context.error("Databricks App returned a non-JSON response.")
+            if status_code == 503:
+                return _databricks_app_unavailable_response(
+                    context, response_headers
+                )
             return _error_response(
                 context, "The upstream service returned an invalid response.", 502, response_headers
             )
@@ -412,6 +495,97 @@ class ProxyGateway:
         if status_code >= 400 and self._must_sanitize_error(payload, response_text):
             payload = {"error": "The upstream service rejected the request."}
         return _json_response(context, payload, status_code, response_headers)
+
+    def _handle_wake(
+        self,
+        context: Any,
+        query_string: str,
+        body: str,
+        response_headers: Mapping[str, str],
+    ) -> Any:
+        if query_string:
+            return _error_response(
+                context,
+                "Request parameters are not supported.",
+                400,
+                response_headers,
+            )
+        if body.strip():
+            try:
+                payload = json.loads(body)
+            except (TypeError, ValueError):
+                return _error_response(
+                    context, "The request body must be an empty JSON object.", 400, response_headers
+                )
+            if payload != {}:
+                return _error_response(
+                    context,
+                    "Request parameters are not supported.",
+                    400,
+                    response_headers,
+                )
+
+        if self._wake_settings is None or self._wake_workspace_client is None:
+            context.error("Databricks wake configuration is unavailable.")
+            return self._wake_failed_response(context, response_headers, 503)
+
+        app_name = self._wake_settings.databricks_app_name
+        try:
+            app = self._wake_workspace_client.apps.get(app_name)
+            state = self._compute_state(app)
+        except Exception:
+            context.error("Databricks wake state check failed.")
+            return self._wake_failed_response(context, response_headers)
+
+        if state == "ACTIVE":
+            context.log("ChicagoPulse live service is already active.")
+            return _json_response(context, {"status": "ready"}, 200, response_headers)
+        if state == "STARTING":
+            context.log("ChicagoPulse live service is already starting.")
+            return _json_response(context, {"status": "starting"}, 202, response_headers)
+
+        with self._wake_lock:
+            now = float(self._clock())
+            if (
+                self._last_wake_at is not None
+                and now - self._last_wake_at < _WAKE_COOLDOWN_SECONDS
+            ):
+                context.log("ChicagoPulse wake request skipped during cooldown.")
+                return _json_response(
+                    context, {"status": "starting"}, 202, response_headers
+                )
+            try:
+                self._wake_workspace_client.apps.start(app_name)
+            except Exception:
+                context.error("Databricks App start request failed.")
+                return self._wake_failed_response(context, response_headers)
+            self._last_wake_at = now
+
+        context.log("ChicagoPulse live service start request accepted.")
+        return _json_response(context, {"status": "starting"}, 202, response_headers)
+
+    @staticmethod
+    def _compute_state(app: Any) -> str | None:
+        compute_status = getattr(app, "compute_status", None)
+        state = getattr(compute_status, "state", None)
+        value = getattr(state, "value", state)
+        return str(value).upper() if value is not None else None
+
+    @staticmethod
+    def _wake_failed_response(
+        context: Any,
+        response_headers: Mapping[str, str],
+        status_code: int = 502,
+    ) -> Any:
+        return _json_response(
+            context,
+            {
+                "error": "ChicagoPulse live services could not be started.",
+                "code": "DATABRICKS_WAKE_FAILED",
+            },
+            status_code,
+            response_headers,
+        )
 
     def _preflight(
         self,

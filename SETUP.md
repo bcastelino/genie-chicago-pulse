@@ -308,6 +308,9 @@ Configure these only on the Appwrite Function:
 | `DATABRICKS_CLIENT_ID` | External gateway service-principal client ID |
 | `DATABRICKS_CLIENT_SECRET` | OAuth secret; mark this variable **Secret** |
 | `DATABRICKS_APP_URL` | HTTPS ChicagoPulse `.databricksapps.com` base URL |
+| `DATABRICKS_WAKE_CLIENT_ID` | Dedicated wake service-principal client ID |
+| `DATABRICKS_WAKE_CLIENT_SECRET` | Dedicated wake OAuth secret; mark this variable **Secret** |
+| `DATABRICKS_APP_NAME` | Fixed wake target; must be `chicagopulse` |
 | `ALLOWED_ORIGINS` | Comma-separated exact Site and explicit localhost origins |
 | `UPSTREAM_TIMEOUT_SECONDS` | Optional, defaults to and recommends `20`; valid range 1–25 |
 
@@ -317,13 +320,25 @@ should be used carefully because synchronous Function-domain requests have a
 Function variable changes require a Function redeployment; Site variable
 changes require a Site rebuild and deployment.
 
+The three wake variables belong only in the Appwrite Function environment.
+Never place them, a Databricks host, or any Databricks credential in a `VITE_*`
+variable because Vite embeds those values in the public browser bundle.
+
 ### Databricks service principal
 
-Create or select a separate external Databricks service principal, assign it to
-the ChicagoPulse workspace, create an OAuth secret, and grant it only `CAN USE`
-on the ChicagoPulse App. It does not need direct Genie, SQL Warehouse, Jobs, or
+Create or select a normal gateway Databricks service principal, assign it to the
+ChicagoPulse workspace, create an OAuth secret, and keep it at only `CAN USE` on
+the ChicagoPulse App. It does not need direct Genie, SQL Warehouse, Jobs, or
 Unity Catalog permissions. Those operations continue inside ChicagoPulse under
 the Databricks App's dedicated service principal and existing resource bindings.
+
+Use a second, dedicated wake service principal for
+`DATABRICKS_WAKE_CLIENT_ID` and `DATABRICKS_WAKE_CLIENT_SECRET`. Grant it only
+the minimum Databricks App management permission necessary to inspect and start
+the single ChicagoPulse App. Do not upgrade or reuse the normal gateway
+identity, and do not grant broader workspace, SQL, Genie, Jobs, or Unity Catalog
+access. Permission and service-principal creation are manual cloud operations;
+the repository does not perform them.
 
 The Function creates one OAuth M2M `WorkspaceClient` and asks the SDK for a
 current authentication header for every outgoing request. It never stores an
@@ -331,6 +346,21 @@ access token in frontend code or forwards a browser-supplied authorization
 header. Follow Databricks' official [external App API authentication](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/connect-local)
 and [App permissions](https://docs.databricks.com/aws/en/dev-tools/databricks-apps/permissions)
 guidance when creating this identity and grant.
+
+The Appwrite-only `POST /api/runtime/wake` route uses the dedicated wake
+identity and the fixed `DATABRICKS_APP_NAME`; it does not forward the request to
+FastAPI and accepts no caller-supplied app name or workspace URL. If the App is
+already active it returns `ready`; otherwise it requests a start and returns
+`starting`. A 60-second in-process cooldown reduces duplicate starts from the
+same warm Function instance. The cooldown is best-effort because Appwrite may
+run multiple Function instances, so platform rate limiting remains important.
+
+After an explicit user click, the Appwrite Site polls health for at most about
+90 seconds and retries the original live-data request when the App is ready.
+The Databricks-hosted frontend never exposes this control, and opening the
+static homepage never issues a wake request. Free Edition can still refuse a
+start when compute or fair-usage limits are exhausted; this recovery flow does
+not make Free Edition an SLA-backed always-on service.
 
 ### Appwrite Function settings
 
@@ -382,17 +412,18 @@ public promotion and monitor Function executions for unusual volume.
 Deployment changes external state and is not part of repository validation.
 
 1. Create the Appwrite Site and Function resources from the roots above.
-2. Create the external Databricks service principal and grant it `CAN USE` on
-   ChicagoPulse.
-3. Set the Function-only variables, including the exact Site origin, and deploy
-   the Function.
+2. Create the normal gateway identity with only `CAN USE`, plus a separate wake
+   identity with the minimum App start permission for ChicagoPulse.
+3. Set the Function-only variables, including the separate wake identity, fixed
+   `DATABRICKS_APP_NAME=chicagopulse`, and exact Site origin, then deploy the
+   Function.
 4. Set the Site's two `VITE_*` variables using the generated `.appwrite.run`
    Function URL, then deploy the Site.
 5. Verify `GET /api/health`, Ask, neighborhoods, Data Health, `/`, and SPA deep
    links from the deployed Site.
-6. Verify an allowed-origin preflight returns `204`, a rejected origin returns
-   `403` without an allow-origin header, the pipeline trigger returns `403`, and
-   the pipeline run-status path returns `404`.
+6. Verify an allowed-origin wake preflight returns `204`, a rejected origin
+   returns `403` without an allow-origin header, the pipeline trigger returns
+   `403`, and the pipeline run-status path returns `404`.
 7. Confirm the browser console is free of request and CORS errors and Function
    logs contain no credentials, tokens, request bodies, or configured URLs.
 

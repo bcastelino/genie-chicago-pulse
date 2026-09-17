@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import main as entrypoint
-from proxy import ProxySettings
+from proxy import ProxySettings, WakeSettings
 
 
 def test_entrypoint_bootstraps_function_root(monkeypatch):
@@ -70,4 +70,57 @@ def test_gateway_reuses_workspace_client_without_caching_authentication(monkeypa
             "client_secret": settings.databricks_client_secret,
             "auth_type": "oauth-m2m",
         }
+    ]
+
+
+def test_gateway_constructs_a_separate_wake_identity(monkeypatch):
+    settings = ProxySettings(
+        databricks_host="https://dbc-example.cloud.databricks.com",
+        databricks_client_id="gateway-client-id",
+        databricks_client_secret="gateway-client-secret",
+        databricks_app_url="https://chicagopulse-123.aws.databricksapps.com",
+        allowed_origins=frozenset({"https://site.appwrite.network"}),
+    )
+    wake_settings = WakeSettings(
+        databricks_host=settings.databricks_host,
+        databricks_client_id="wake-client-id",
+        databricks_client_secret="wake-client-secret",
+        databricks_app_name="chicagopulse",
+    )
+    workspace_calls = []
+
+    class FakeWorkspaceClient:
+        def __init__(self, **kwargs):
+            workspace_calls.append(kwargs)
+
+    monkeypatch.setattr(entrypoint.ProxySettings, "from_env", lambda: settings)
+    monkeypatch.setattr(
+        entrypoint.WakeSettings,
+        "from_env",
+        lambda databricks_host: wake_settings,
+    )
+    monkeypatch.setattr(entrypoint, "WorkspaceClient", FakeWorkspaceClient)
+    monkeypatch.setattr(entrypoint.requests, "Session", object)
+    entrypoint._gateway.cache_clear()
+
+    try:
+        gateway = entrypoint._gateway()
+    finally:
+        entrypoint._gateway.cache_clear()
+
+    assert gateway._workspace_client is not gateway._wake_workspace_client
+    assert workspace_calls == [
+        {
+            "host": settings.databricks_host,
+            "client_id": "gateway-client-id",
+            "client_secret": "gateway-client-secret",
+            "auth_type": "oauth-m2m",
+        },
+        {
+            "host": settings.databricks_host,
+            "client_id": "wake-client-id",
+            "client_secret": "wake-client-secret",
+            "auth_type": "oauth-m2m",
+            "scopes": ["apps"],
+        },
     ]

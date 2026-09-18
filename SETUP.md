@@ -276,6 +276,22 @@ Required terminal states:
 Databricks live app:
 [chicagopulse-7474647819672339.aws.databricksapps.com](https://chicagopulse-7474647819672339.aws.databricksapps.com)
 
+### Deploy from Git
+
+For a Databricks App deployment sourced directly from this repository, use:
+
+| Setting | Value |
+| --- | --- |
+| Git reference | `main` |
+| Reference type | Branch |
+| Source code path | `app` |
+
+The `app/package.json` file is a build wrapper for this source root. Its build
+script performs a clean install from `app/frontend/package-lock.json`, includes
+the Vite and TypeScript development dependencies, and generates
+`app/frontend/dist` before FastAPI starts. The frontend package and dependency
+definitions remain under `app/frontend/`.
+
 ## Deploy with Appwrite Sites and Functions
 
 This mode publishes the existing React frontend as a static Site and sends API

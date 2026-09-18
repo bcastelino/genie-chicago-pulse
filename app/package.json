@@ -1,0 +1,8 @@
+{
+  "name": "chicagopulse-databricks-app",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "npm --prefix frontend ci --include=dev && npm --prefix frontend run build"
+  }
+}

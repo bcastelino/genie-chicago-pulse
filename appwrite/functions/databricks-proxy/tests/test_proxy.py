@@ -543,6 +543,31 @@ def test_wake_route_returns_controlled_error_when_credentials_are_missing(settin
     assert http.calls == []
 
 
+def test_wake_route_logs_only_safe_initialization_error_type(settings):
+    workspace = FakeWorkspaceClient()
+    http = FakeHttpClient()
+    gateway = ProxyGateway(
+        settings,
+        workspace,
+        http,
+        wake_initialization_error_type="TypeError",
+    )
+    context = FakeContext(method="POST", path="/api/runtime/wake")
+
+    result = gateway.handle(context)
+
+    assert result.status_code == 503
+    assert result.body == {
+        "error": "ChicagoPulse live services could not be started.",
+        "code": "DATABRICKS_WAKE_FAILED",
+    }
+    assert context.errors == [
+        "Databricks wake configuration is unavailable. "
+        "Initialization error type: TypeError."
+    ]
+    assert "sensitive configuration" not in "\n".join(context.errors)
+
+
 @pytest.mark.parametrize("failure_stage", ["get", "start"])
 def test_wake_failures_are_sanitized_without_secret_leakage(settings, failure_stage):
     secret = "wake-client-secret"

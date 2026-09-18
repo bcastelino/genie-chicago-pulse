@@ -33,6 +33,7 @@ def _gateway() -> ProxyGateway:
     )
     wake_settings = None
     wake_workspace_client = None
+    wake_initialization_error_type = None
     try:
         wake_settings = WakeSettings.from_env(settings.databricks_host)
         wake_workspace_client = WorkspaceClient(
@@ -40,19 +41,19 @@ def _gateway() -> ProxyGateway:
             client_id=wake_settings.databricks_client_id,
             client_secret=wake_settings.databricks_client_secret,
             auth_type="oauth-m2m",
-            scopes=["apps"],
         )
-    except Exception:
+    except Exception as exc:
         # Normal gateway traffic must remain available when optional wake
         # credentials are absent or incomplete. The wake route returns a
         # controlled, sanitized configuration error when called.
-        pass
+        wake_initialization_error_type = type(exc).__name__
     return ProxyGateway(
         settings,
         workspace_client,
         requests.Session(),
         wake_settings,
         wake_workspace_client,
+        wake_initialization_error_type=wake_initialization_error_type,
     )
 
 

@@ -330,6 +330,7 @@ class ProxyGateway:
         wake_settings: WakeSettings | None = None,
         wake_workspace_client: WakeWorkspaceClientLike | None = None,
         *,
+        wake_initialization_error_type: str | None = None,
         clock: Any = time.monotonic,
     ) -> None:
         self._settings = settings
@@ -337,6 +338,7 @@ class ProxyGateway:
         self._http_client = http_client
         self._wake_settings = wake_settings
         self._wake_workspace_client = wake_workspace_client
+        self._wake_initialization_error_type = wake_initialization_error_type
         self._clock = clock
         self._wake_lock = threading.Lock()
         self._last_wake_at: float | None = None
@@ -526,7 +528,13 @@ class ProxyGateway:
                 )
 
         if self._wake_settings is None or self._wake_workspace_client is None:
-            context.error("Databricks wake configuration is unavailable.")
+            diagnostic = "Databricks wake configuration is unavailable."
+            if self._wake_initialization_error_type:
+                diagnostic += (
+                    " Initialization error type: "
+                    f"{self._wake_initialization_error_type}."
+                )
+            context.error(diagnostic)
             return self._wake_failed_response(context, response_headers, 503)
 
         app_name = self._wake_settings.databricks_app_name

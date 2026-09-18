@@ -121,6 +121,60 @@ def test_gateway_constructs_a_separate_wake_identity(monkeypatch):
             "client_id": "wake-client-id",
             "client_secret": "wake-client-secret",
             "auth_type": "oauth-m2m",
-            "scopes": ["apps"],
         },
     ]
+
+
+def test_wake_client_failure_preserves_normal_gateway_initialization(monkeypatch):
+    settings = ProxySettings(
+        databricks_host="https://dbc-example.cloud.databricks.com",
+        databricks_client_id="gateway-client-id",
+        databricks_client_secret="gateway-client-secret",
+        databricks_app_url="https://chicagopulse-123.aws.databricksapps.com",
+        allowed_origins=frozenset({"https://site.appwrite.network"}),
+    )
+    wake_settings = WakeSettings(
+        databricks_host=settings.databricks_host,
+        databricks_client_id="wake-client-id",
+        databricks_client_secret="wake-client-secret",
+        databricks_app_name="chicagopulse",
+    )
+    normal_workspace = object()
+    workspace_calls = []
+
+    def fake_workspace_client(**kwargs):
+        workspace_calls.append(kwargs)
+        if len(workspace_calls) == 1:
+            return normal_workspace
+        raise TypeError("sensitive configuration must not be logged")
+
+    monkeypatch.setattr(entrypoint.ProxySettings, "from_env", lambda: settings)
+    monkeypatch.setattr(
+        entrypoint.WakeSettings,
+        "from_env",
+        lambda databricks_host: wake_settings,
+    )
+    monkeypatch.setattr(entrypoint, "WorkspaceClient", fake_workspace_client)
+    monkeypatch.setattr(entrypoint.requests, "Session", object)
+    entrypoint._gateway.cache_clear()
+
+    try:
+        gateway = entrypoint._gateway()
+    finally:
+        entrypoint._gateway.cache_clear()
+
+    assert gateway._workspace_client is normal_workspace
+    assert gateway._wake_workspace_client is None
+    assert gateway._wake_initialization_error_type == "TypeError"
+    assert workspace_calls[0] == {
+        "host": settings.databricks_host,
+        "client_id": "gateway-client-id",
+        "client_secret": "gateway-client-secret",
+        "auth_type": "oauth-m2m",
+    }
+    assert workspace_calls[1] == {
+        "host": settings.databricks_host,
+        "client_id": "wake-client-id",
+        "client_secret": "wake-client-secret",
+        "auth_type": "oauth-m2m",
+    }
